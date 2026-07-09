@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FamilyTask Pro - Producción</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .modal-blur { backdrop-filter: blur(8px); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen text-gray-800">
+
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-xl flex flex-col justify-between relative">
+        
+        <header class="bg-indigo-600 text-white p-4 shadow-md">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">🏡</span>
+                    <h1 class="text-xl font-bold tracking-tight">FamilyTask Pro</h1>
+                </div>
+                <select id="userSelector" onchange="switchUser(this.value)" class="bg-indigo-700 text-white font-medium rounded-lg px-3 py-1.5 focus:outline-none border border-indigo-500 text-sm">
+                    <option value="Ian">👦 Ver como Ian</option>
+                    <option value="Bruno">👶 Ver como Bruno</option>
+                    <option value="Padres">🛠️ Panel Papás</option>
+                </select>
+            </div>
+            
+            <div id="userQuickStatus" class="mt-3 flex justify-between items-center bg-indigo-700/50 rounded-lg p-2 text-sm">
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold id-name">Ian</span>
+                    <span id="streakBadge" class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold hidden">⚡ Racha x5 (1.2x!)</span>
+                </div>
+                <div class="flex items-center space-x-1 font-extrabold text-yellow-300 text-base">
+                    <span>🌟</span> <span id="userPointsDisplay">0</span> <span>pts</span>
+                    <span id="reservedPointsDisplay" class="text-xs text-indigo-200 font-normal hidden"></span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow p-4 pb-24 overflow-y-auto">
+            
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-4 text-xs text-amber-800 flex justify-between items-center">
+                <div><strong>⚙️ Entorno de Control:</strong> Simular Hora</div>
+                <select id="timeSimulator" onchange="simulateTime(this.value)" class="bg-white border border-amber-300 rounded p-1 font-medium text-amber-900">
+                    <option value="12:00">☀️ Almuerzo (12:00 PM)</option>
+                    <option value="19:30">🌆 Merienda (7:30 PM)</option>
+                    <option value="20:05">🚨 Bloqueo Activo (8:05 PM)</option>
+                    <option value="22:30">🌙 Noche (10:30 PM)</option>
+                </select>
+            </div>
+
+            <div id="viewChicos" class="tab-content active space-y-4">
+                
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl p-4 text-white shadow-md">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold flex items-center gap-1">🎲 El Dado de la Suerte</h3>
+                        <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">1 vez al día</span>
+                    </div>
+                    <p class="text-xs opacity-90 mb-3">Obtén una tarea sorpresa con puntos adicionales para acelerar tus metas.</p>
+                    <button id="btnDado" onclick="lanzarDado()" class="w-full bg-white text-indigo-600 font-bold py-2 px-4 rounded-lg shadow hover:bg-indigo-50 transition active:scale-95 text-xs">
+                        🎲 Lanzar Dado Diario
+                    </button>
+                </div>
+
+                <div id="medicalCard" class="bg-red-50 border-2 border-red-200 rounded-xl p-4 hidden space-y-3">
+                    <div class="flex items-center space-x-2 text-red-700 font-bold">
+                        <span>💊</span> <h4>CONTROL MÉDICO DE HOY</h4>
+                    </div>
+                    <div id="medicalTomasContainer" class="space-y-2">
+                        </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-700 text-base mb-3 flex items-center justify-between">
+                        <span>📋 Tus Tareas de Hoy</span>
+                        <span id="dateDisplay" class="text-xs text-gray-400 font-normal"></span>
+                    </h3>
+                    <div id="tasksListContainer" class="space-y-2.5">
+                        </div>
+                </div>
+            </div>
+
+            <div id="viewTienda" class="tab-content space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-800">🎁 Tienda de Premios</h2>
+                    <button id="btnCrearPremio" onclick="openModal('modalNuevoPremio')" class="hidden bg-indigo-600 text-white text-xs font-bold px-3 py-2 rounded-lg shadow hover:bg-indigo-700">
+                        + Crear Premio
+                    </button>
+                </div>
+
+                <div id="parentAwardAlert" class="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 text-xs text-amber-900 hidden space-y-2">
+                    <div class="flex items-center space-x-1.5 font-bold">
+                        <span>🔔</span> <span>SOLICITUDES DE PREMIOS POR APROBAR</span>
+                    </div>
+                    <div id="rewardsStatusContainer" class="space-y-2">
+                        </div>
+                </div>
+
+                <div id="childHistoryBox" class="bg-gray-50 border border-gray-200 rounded-xl p-3 hidden">
+                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Estado de mis canjes</h3>
+                    <div id="childHistoryContainer" class="space-y-1.5 text-xs"></div>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">⚡ Beneficios Directos</h3>
+                    <div id="awardsGrid" class="grid grid-cols-1 gap-3"></div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-200 space-y-3">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-base">🏆</span>
+                        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Grandes Premios de la Casa</h3>
+                    </div>
+                    <div id="permanentAwardsContainer" class="grid grid-cols-1 gap-2.5"></div>
+                </div>
+            </div>
+
+            <div id="viewPadres" class="tab-content space-y-5">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 relative flex flex-col justify-between">
+                        <div>
+                            <h4 class="font-bold text-blue-900 text-sm">👦 Ian</h4>
+                            <p class="text-xs text-blue-700 font-bold mt-0.5">🌟 <span id="pointsIan">0</span> pts</p>
+                            <p id="medStatusIan" class="text-[10px] text-gray-500 mt-1">Salud: Saludable</p>
+                        </div>
+                        <button onclick="toggleModoEnfermo('Ian')" id="btnMedIan" class="mt-3 text-[10px] w-full bg-blue-600 text-white font-bold py-1.5 rounded-lg">Configurar Medicina</button>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-100 rounded-xl p-3 relative flex flex-col justify-between">
+                        <div>
+                            <h4 class="font-bold text-purple-900 text-sm">👶 Bruno</h4>
+                            <p class="text-xs text-purple-700 font-bold mt-0.5">🌟 <span id="pointsBruno">0</span> pts</p>
+                            <p id="medStatusBruno" class="text-[10px] text-gray-500 mt-1">Salud: Saludable</p>
+                        </div>
+                        <button onclick="toggleModoEnfermo('Bruno')" id="btnMedBruno" class="mt-3 text-[10px] w-full bg-purple-600 text-white font-bold py-1.5 rounded-lg">Configurar Medicina</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-700 text-sm mb-3">📅 Cronograma Maestro Semanal</h3>
+                    <div id="weeklyMasterContainer" class="space-y-3"></div>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs">
+                    <h4 class="font-bold text-gray-700 mb-2">⚖️ Ajuste Manual de Puntos</h4>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <select id="adjHijo" class="bg-white border rounded p-1.5 text-xs">
+                            <option value="Ian">Ian</option>
+                            <option value="Bruno">Bruno</option>
+                        </select>
+                        <input type="number" id="adjPuntos" placeholder="Cantidad" class="bg-white border rounded p-1.5 text-xs" />
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="ajustarPuntos(true)" class="flex-1 bg-green-600 text-white font-bold py-1 rounded text-xs">Sumar</button>
+                        <button onclick="ajustarPuntos(false)" class="flex-1 bg-red-600 text-white font-bold py-1 rounded text-xs">Restar</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 grid grid-cols-3 text-center py-2 shadow-inner z-10">
+            <button onclick="switchTab('chicos')" id="navChicos" class="text-indigo-600 font-bold flex flex-col items-center justify-center text-xs">
+                <span class="text-lg">📋</span><span>Tareas</span>
+            </button>
+            <button onclick="switchTab('tienda')" id="navTienda" class="text-gray-400 font-medium flex flex-col items-center justify-center text-xs relative">
+                <span class="text-lg">🎁</span><span>Tienda</span>
+                <span id="badgeTienda" class="absolute top-1 right-8 bg-red-500 text-white font-bold rounded-full w-4 h-4 text-[9px] hidden flex items-center justify-center">0</span>
+            </button>
+            <button onclick="switchUser('Padres')" id="navPadres" class="text-gray-400 font-medium flex flex-col items-center justify-center text-xs">
+                <span class="text-lg">⚙️</span><span>Control</span>
+            </button>
+        </nav>
+
+        <div id="lockoutScreen" class="absolute inset-0 bg-slate-900/95 modal-blur z-50 flex-col items-center justify-center p-6 text-white text-center hidden">
+            <div class="text-5xl mb-3 animate-bounce">🛡️</div>
+            <h2 class="text-xl font-black text-amber-400 tracking-tight">¡MISIÓN DE CONTROL REQUERIDA!</h2>
+            <p class="text-xs text-slate-300 mt-1 max-w-xs mx-auto">Ya pasó la hora de corte. El sistema congeló los accesos hasta completar los pendientes obligatorios del día.</p>
+            
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 w-full my-5 text-left space-y-3">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pendientes críticos bloqueantes:</p>
+                <div id="lockoutTasksContainer" class="space-y-2"></div>
+            </div>
+            <p class="text-[11px] text-slate-500 italic">Las dosis médicas del futuro y premios quedan exentos de este bloqueo.</p>
+        </div>
+
+        <div id="modalNuevaTarea" class="fixed inset-0 bg-black/50 modal-blur z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl w-full max-w-sm p-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800 text-sm">Aumentar Tarea (<span id="modalTargetDay"></span>)</h3>
+                    <button onclick="closeModal('modalNuevaTarea')" class="text-gray-400 text-lg font-bold">&times;</button>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-gray-600 mb-1">Nombre de la Tarea</label>
+                        <input type="text" id="taskName" placeholder="Ej: Sacar la basura" class="w-full border rounded p-2 bg-gray-50" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Puntos Base</label>
+                            <input type="number" id="taskPoints" value="15" class="w-full border rounded p-2 bg-gray-50" />
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Asignación</label>
+                            <select id="taskAssignee" class="w-full border rounded p-2 bg-gray-50">
+                                <option value="Ambos">Ambos Hijos</option>
+                                <option value="Ian">Ian</option>
+                                <option value="Bruno">Bruno</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="guardarNuevaTarea()" class="w-full bg-indigo-600 text-white font-bold py-2 rounded-xl text-xs shadow hover:bg-indigo-700">Guardar Tarea</button>
+            </div>
+        </div>
+
+        <div id="modalModoEnfermo" class="fixed inset-0 bg-black/50 modal-blur z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl w-full max-w-sm p-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800 text-sm">Configurar Medicina - <span id="sickTargetName"></span></h3>
+                    <button onclick="closeModal('modalModoEnfermo')" class="text-gray-400 text-lg font-bold">&times;</button>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-gray-600 mb-1">Nombre del Remedio</label>
+                        <input type="text" id="sickMedName" placeholder="Ej: Ibuprofeno Jarabe" class="w-full border rounded p-2" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Tomas al día</label>
+                            <select id="sickTomasAlDia" class="w-full border rounded p-2">
+                                <option value="1">1 al día (Cada 24h)</option>
+                                <option value="2">2 al día (Cada 12h)</option>
+                                <option value="3" selected>3 al día (Cada 8h)</option>
+                                <option value="4">4 al día (Cada 6h)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Hora Primera Toma</label>
+                            <input type="time" id="sickHoraInicio" value="08:00" class="w-full border rounded p-2" />
+                        </div>
+                    </div>
+                </div>
+                <button onclick="activarMedicacionMotor()" class="w-full bg-red-600 text-white font-bold py-2 rounded-xl text-xs shadow hover:bg-red-700">Activar Esquema Médico</button>
+            </div>
+        </div>
+
+        <div id="modalNuevoPremio" class="fixed inset-0 bg-black/50 modal-blur z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl w-full max-w-sm p-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800 text-sm">Nuevo Premio de la Casa</h3>
+                    <button onclick="closeModal('modalNuevoPremio')" class="text-gray-400 text-lg font-bold">&times;</button>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-gray-600 mb-1">Nombre del Premio</label>
+                        <input type="text" id="awardName" placeholder="Ej: Salida por hamburguesas" class="w-full border rounded p-2 bg-gray-50" />
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-600 mb-1">Descripción</label>
+                        <input type="text" id="awardDesc" placeholder="Ej: Meta mayor del mes" class="w-full border rounded p-2 bg-gray-50" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Costo (Puntos)</label>
+                            <input type="number" id="awardCost" value="100" class="w-full border rounded p-2 bg-gray-50" />
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Tipo de Premio</label>
+                            <select id="awardType" class="w-full border rounded p-2 bg-gray-50">
+                                <option value="permanente">🏆 Premio Mayor Permanente</option>
+                                <option value="normal">⚡ Beneficio Directo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="guardarNuevoPremio()" class="w-full bg-indigo-600 text-white font-bold py-2 rounded-xl text-xs shadow hover:bg-indigo-700">Aumentar a la Tienda</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+        let db = {
+            currentUser: "Ian",
+            simulatedTime: "12:00",
+            currentDayIndex: 3, 
+            users: {
+                Ian: { points: 180, reservedPoints: 0, streak: 5, lanzadoDado: false },
+                Bruno: { points: 125, reservedPoints: 0, streak: 3, lanzadoDado: false }
+            },
+            tratamientosMedicos: {
+                Ian: { activo: false, medicina: "", tomas: [] },
+                Bruno: { activo: false, medicina: "", tomas: [] }
+            },
+            tareasBase: [
+                { id: 1, name: "Lavar Platos - Desayuno", points: 10, timeLimit: "10:00 AM", day: "Todos", assignee: "Ambos" },
+                { id: 2, name: "Lavar Platos - Almuerzo", points: 20, timeLimit: "3:00 PM", day: "Todos", assignee: "Ambos" },
+                { id: 3, name: "Lavar Platos - Merienda", points: 15, timeLimit: "8:30 PM", day: "Todos", assignee: "Ambos" }
+            ],
+            tareasDiariasHistorial: {}, 
+            catalogoPremios: [
+                { id: 101, name: "30 min de Pantallas", desc: "Válido solo por la tarde", cost: 50, type: "normal" },
+                { id: 104, name: "Salida Familiar por Hamburguesas 🍔", desc: "Gran premio de fin de semana", cost: 300, type: "permanente" },
+                { id: 105, name: "Entrada al Cine con Amigos 🍿", desc: "Película + canguil a elección", cost: 450, type: "permanente" }
+            ],
+            solicitudesPremios: []
+        };
+
+        function initDB() {
+            if (localStorage.getItem("family_db")) {
+                db = JSON.parse(localStorage.getItem("family_db"));
+            } else {
+                saveDB();
+            }
+        }
+
+        function saveDB() {
+            localStorage.setItem("family_db", JSON.stringify(db));
+        }
+
+        function switchUser(user) {
+            db.currentUser = user;
+            saveDB();
+            
+            const quickStatus = document.getElementById("userQuickStatus");
+            const navPadres = document.getElementById("navPadres");
+            const navChicos = document.getElementById("navChicos");
+            const btnCrearPremio = document.getElementById("btnCrearPremio");
+
+            navPadres.classList.replace("text-indigo-600", "text-gray-400");
+            navChicos.classList.replace("text-indigo-600", "text-gray-400");
+
+            if (user === "Padres") {
+                quickStatus.classList.add("hidden");
+                navPadres.classList.replace("text-gray-400", "text-indigo-600");
+                btnCrearPremio.classList.remove("hidden");
+                switchTab('padres');
+            } else {
+                quickStatus.classList.remove("hidden");
+                navChicos.classList.replace("text-gray-400", "text-indigo-600");
+                btnCrearPremio.classList.add("hidden");
+                switchTab('chicos');
+            }
+            renderAll();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            const navChicos = document.getElementById("navChicos");
+            const navTienda = document.getElementById("navTienda");
+            
+            navChicos.classList.replace("text-indigo-600", "text-gray-400");
+            navTienda.classList.replace("text-indigo-600", "text-gray-400");
+
+            if (tabId === 'chicos') {
+                document.getElementById('viewChicos').classList.add('active');
+                navChicos.classList.replace("text-gray-400", "text-indigo-600");
+            } else if (tabId === 'tienda') {
+                document.getElementById('viewTienda').classList.add('active');
+                navTienda.classList.replace("text-gray-400", "text-indigo-600");
+            } else if (tabId === 'padres') {
+                document.getElementById('viewPadres').classList.add('active');
+            }
+            checkLockoutRules();
+        }
+
+        function simulateTime(value) {
+            db.simulatedTime = value;
+            saveDB();
+            checkLockoutRules();
+            renderAll();
+        }
+
+        function getActiveDayName() { return DIAS_SEMANA[db.currentDayIndex]; }
+
+        function verificarExpiracionHora(horaLimiteStr) {
+            if (horaLimiteStr === "Flexible") return false;
+            const [simH, simM] = db.simulatedTime.split(":").map(Number);
+            const minSim = (simH * 60) + simM;
+
+            let [horaStr, ampm] = horaLimiteStr.split(" ");
+            let [limH, limM] = horaStr.split(":").map(Number);
+            if (ampm === "PM" && limH !== 12) limH += 12;
+            if (ampm === "AM" && limH === 12) limH = 0;
+            return minSim > ((limH * 60) + limM);
+        }
+
+        // CONTROL DE CORTE CONDICIONAL A LAS 8:00 PM (Filtrado de dosis futuras)
+        function checkLockoutRules() {
+            const lockoutScreen = document.getElementById("lockoutScreen");
+            if (db.currentUser === "Padres") {
+                lockoutScreen.classList.add("hidden");
+                return;
+            }
+
+            const [currentHour, currentMin] = db.simulatedTime.split(":").map(Number);
+            const totalMinSimulados = (currentHour * 60) + currentMin;
+            
+            const dayName = getActiveDayName();
+            const key = `${dayName}-${db.currentUser}`;
+            const tasks = db.tareasDiariasHistorial[key] || [];
+            
+            let pendientesBloqueantes = tasks.filter(t => !t.done);
+
+            // Filtrado médico para evitar la paradoja: solo bloquea si la dosis ya pasó y no se tomó
+            const med = db.tratamientosMedicos[db.currentUser];
+            if (med.activo) {
+                med.tomas.forEach(toma => {
+                    const [tomaH, tomaM] = toma.hora.split(":").map(Number);
+                    const totalMinToma = (tomaH * 60) + tomaM;
+                    
+                    if (totalMinSimulados >= totalMinToma && !toma.completada) {
+                        pendientesBloqueantes.push({ id: toma.id, name: `💊 Dosis de las ${toma.hora} (${med.medicina})`, isMed: true });
+                    }
+                });
+            }
+
+            if (currentHour >= 20 && pendientesBloqueantes.length > 0) {
+                lockoutScreen.classList.remove("hidden");
+                lockoutScreen.classList.add("flex");
+                
+                const container = document.getElementById("lockoutTasksContainer");
+                container.innerHTML = "";
+                pendientesBloqueantes.forEach(t => {
+                    container.innerHTML += `
+                        <div class="flex justify-between items-center bg-slate-700 p-2 rounded border border-slate-600 text-xs">
+                            <div><p class="font-bold text-white">${t.name}</p></div>
+                            <button onclick="resolverDesdeBloqueo('${key}', ${t.id}, ${t.isMed || false})" class="bg-amber-500 text-slate-950 font-black px-2 py-1 rounded">✓ MARCAR</button>
+                        </div>
+                    `;
+                });
+            } else {
+                lockoutScreen.classList.add("hidden");
+            }
+        }
+
+        function resolverDesdeBloqueo(historyKey, id, isMed) {
+            if (isMed) {
+                const med = db.tratamientosMedicos[db.currentUser];
+                const toma = med.tomas.find(t => t.id === id);
+                if (toma) { toma.completada = true; db.users[db.currentUser].points += 5; }
+            } else {
+                const list = db.tareasDiariasHistorial[historyKey];
+                const task = list.find(t => t.id === id);
+                if (task) { task.done = true; db.users[db.currentUser].points += task.points; }
+            }
+            saveDB();
+            checkLockoutRules();
+            renderAll();
+        }
+
+        function inicializarDiaHijo(dayName, hijo) {
+            const key = `${dayName}-${hijo}`;
+            if (!db.tareasDiariasHistorial[key]) {
+                let tareas = [];
+                db.tareasBase.forEach(base => {
+                    if (base.day === "Todos" || base.day.includes(dayName)) {
+                        if (base.assignee === "Ambos" || base.assignee === hijo) {
+                            tareas.push({ id: base.id, name: base.name, points: base.points, timeLimit: base.timeLimit, done: false });
+                        }
+                    }
+                });
+                db.tareasDiariasHistorial[key] = tareas;
+                saveDB();
+            }
+        }
+
+        function renderTareasChicos() {
+            const hijo = db.currentUser;
+            const dayName = getActiveDayName();
+            document.getElementById("dateDisplay").textContent = `${dayName} (${db.simulatedTime})`;
+            
+            document.querySelectorAll(".id-name").forEach(el => el.textContent = hijo);
+            document.getElementById("userPointsDisplay").textContent = db.users[hijo].points;
+            
+            const resDisplay = document.getElementById("reservedPointsDisplay");
+            if(db.users[hijo].reservedPoints > 0) {
+                resDisplay.textContent = `(-${db.users[hijo].reservedPoints} en revisión)`;
+                resDisplay.classList.remove("hidden");
+            } else { resDisplay.classList.add("hidden"); }
+
+            document.getElementById("streakBadge").classList.toggle("hidden", db.users[hijo].streak < 5);
+
+            inicializarDiaHijo(dayName, hijo);
+            const tasks = db.tareasDiariasHistorial[`${dayName}-${hijo}`];
+            const container = document.getElementById("tasksListContainer");
+            container.innerHTML = "";
+
+            tasks.forEach(t => {
+                let isExpired = verificarExpiracionHora(t.timeLimit) && !t.done;
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-white border ${t.done ? 'border-green-200 bg-green-50/20':isExpired?'border-red-200':'border-gray-100'} p-3 rounded-xl shadow-sm text-xs">
+                        <div>
+                            <p class="font-bold ${t.done ? 'line-through text-gray-400':'text-gray-800'}">${t.name}</p>
+                            <span class="text-amber-600 font-bold">🌟 +${t.points} pts</span>
+                        </div>
+                        <div>
+                            ${t.done ? '<span class="text-green-600 font-bold">✓ Listo</span>' : isExpired ? '<span class="text-red-500 font-bold">Expiró</span>' : `<button onclick="cumplirTarea('${dayName}-${hijo}', ${t.id})" class="bg-indigo-600 text-white font-bold px-3 py-1.5 rounded-lg">Listo</button>`}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // RENDER MEDIDAS AUTOMATIZADAS
+            const medCard = document.getElementById("medicalCard");
+            const tomasContainer = document.getElementById("medicalTomasContainer");
+            const med = db.tratamientosMedicos[hijo];
+
+            if (med && med.activo) {
+                medCard.classList.remove("hidden");
+                tomasContainer.innerHTML = `<p class="text-[11px] text-gray-500 font-medium">Tratamiento: <strong>${med.medicina}</strong></p>`;
+                med.tomas.forEach(toma => {
+                    tomasContainer.innerHTML += `
+                        <div class="flex justify-between items-center bg-white p-2 rounded border border-red-100 text-xs">
+                            <span>🕒 Toma programada: <strong>${toma.hora}</strong></span>
+                            ${toma.completada ? '<span class="text-green-600 font-bold">✓ Tomada</span>' : `<button onclick="registrarDosisMedica(${toma.id})" class="bg-red-600 text-white px-2 py-1 rounded text-[10px] font-bold">+ Registrar (+5 pts)</button>`}
+                        </div>
+                    `;
+                });
+            } else { medCard.classList.add("hidden"); }
+        }
+
+        function cumplirTarea(key, id) {
+            const task = db.tareasDiariasHistorial[key].find(t => t.id === id);
+            if (task && !task.done) {
+                if (verificarExpiracionHora(task.timeLimit)) { alert("Esta misión expiró."); return; }
+                task.done = true;
+                let mult = db.users[db.currentUser].streak >= 5 ? 1.2 : 1;
+                db.users[db.currentUser].points += Math.round(task.points * mult);
+                saveDB(); renderAll();
+            }
+        }
+
+        // MOTOR RECONSTRUCTIVO DE HORARIOS MÉDICOS
+        function activarMedicacionMotor() {
+            const hijo = document.getElementById("sickTargetName").textContent;
+            const medicina = document.getElementById("sickMedName").value || "Medicamento";
+            const tomasAlDia = parseInt(document.getElementById("sickTomasAlDia").value);
+            const horaInicio = document.getElementById("sickHoraInicio").value;
+
+            let tomasCalculadas = [];
+            let interval = Math.floor(24 / tomasAlDia);
+            let [horas, minutos] = horaInicio.split(':').map(Number);
+
+            for (let i = 0; i < tomasAlDia; i++) {
+                let hFormated = String(horas).padStart(2, '0');
+                let mFormated = String(minutos).padStart(2, '0');
+                tomasCalculadas.push({ id: i + 1, hora: `${hFormated}:${mFormated}`, completada: false });
+                horas = (horas + interval) % 24;
+            }
+
+            db.tratamientosMedicos[hijo] = { activo: true, medicina: medicina, tomas: tomasCalculadas };
+            saveDB(); closeModal('modalModoEnfermo'); renderAll();
+        }
+
+        function registrarDosisMedica(tomaId) {
+            const med = db.tratamientosMedicos[db.currentUser];
+            const toma = med.tomas.find(t => t.id === tomaId);
+            if (toma && !toma.completada) {
+                toma.completada = true;
+                db.users[db.currentUser].points += 5;
+                saveDB(); alert("Dosis registrada correctamente. ¡+5 puntos!"); renderAll();
+            }
+        }
+
+        // CONGELAMIENTO ATÓMICO EN RESERVA (Vulnerabilidad Doble Gasto Resuelta)
+        function solicitarPremio(premioId) {
+            if (db.currentUser === "Padres") { alert("Cambia al perfil de un hijo para canjear."); return; }
+            
+            const hijo = db.currentUser;
+            const premio = db.catalogoPremios.find(p => p.id === premioId);
+
+            if (db.users[hijo].points < premio.cost) {
+                alert(`Puntos insuficientes. Te faltan ${premio.cost - db.users[hijo].points} pts.`);
+                return;
+            }
+
+            // Bloqueo atómico inmediato
+            db.users[hijo].points -= premio.cost;
+            db.users[hijo].reservedPoints += premio.cost;
+
+            db.solicitudesPremios.push({
+                id: Date.now(), hijo: hijo, premioId: premio.id, premioName: premio.name, cost: premio.cost, status: "Pendiente"
+            });
+
+            saveDB(); alert("Solicitud enviada. Los puntos han quedado reservados en resguardo de papás."); renderAll();
+        }
+
+        function renderTienda() {
+            const grid = document.getElementById("awardsGrid");
+            const permanentContainer = document.getElementById("permanentAwardsContainer");
+            const parentAlert = document.getElementById("parentAwardAlert");
+            const rContainer = document.getElementById("rewardsStatusContainer");
+            const childBox = document.getElementById("childHistoryBox");
+            const childContainer = document.getElementById("childHistoryContainer");
+
+            grid.innerHTML = ""; permanentContainer.innerHTML = ""; rContainer.innerHTML = ""; childContainer.innerHTML = "";
+
+            let pendientes = db.solicitudesPremios.filter(s => s.status === "Pendiente");
+            document.getElementById("badgeTienda").textContent = pendientes.length;
+            document.getElementById("badgeTienda").classList.toggle("hidden", pendientes.length === 0);
+
+            // Vista Papás: Mostrar semáforo de aprobaciones cruzadas
+            if (db.currentUser === "Padres") {
+                childBox.classList.add("hidden");
+                parentAlert.classList.toggle("hidden", pendientes.length === 0);
+                
+                pendientes.forEach(s => {
+                    rContainer.innerHTML += `
+                        <div class="bg-white border p-2.5 rounded-lg flex justify-between items-center text-xs shadow-sm">
+                            <div>
+                                <span class="font-bold text-indigo-600">${s.hijo}</span>: ${s.premioName}
+                                <p class="text-[10px] text-gray-400">Costo: ${s.cost} pts | Saldo Restante: ${db.users[s.hijo].points} pts</p>
+                            </div>
+                            <div class="flex space-x-1">
+                                <button onclick="resolverSolicitud(${s.id}, 'Aprobado')" class="bg-green-600 text-white font-bold px-2 py-1 rounded text-[10px]">Aprobar</button>
+                                <button onclick="resolverSolicitud(${s.id}, 'Rechazado')" class="bg-red-600 text-white font-bold px-2 py-1 rounded text-[10px]">Rechazar</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                // Vista Hijos: Ver historial propio
+                parentAlert.classList.add("hidden");
+                let misSols = db.solicitudesPremios.filter(s => s.hijo === db.currentUser);
+                childBox.classList.toggle("hidden", misSols.length === 0);
+                
+                misSols.forEach(s => {
+                    let badgeColor = s.status === 'Pendiente' ? 'bg-amber-100 text-amber-700' : s.status === 'Aprobado' ? 'bg-green-100 text-green-700':'bg-red-100 text-red-700';
+                    childContainer.innerHTML += `
+                        <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                            <span>${s.premioName}</span>
+                            <span class="${badgeColor} text-[9px] font-black px-1.5 py-0.5 rounded uppercase">${s.status}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // Renderizado segregado de tarjetas del catálogo
+            db.catalogoPremios.forEach(p => {
+                let enEspera = pendientes.some(s => s.hijo === db.currentUser && s.premioId === p.id);
+                let targetHtml = `
+                    <div class="bg-white border ${p.type==='permanente'?'border-amber-200 bg-amber-50/10':'border-gray-200'} rounded-xl p-3.5 flex justify-between items-center text-xs shadow-sm">
+                        <div>
+                            <h4 class="font-bold text-gray-800">${p.name}</h4>
+                            <p class="text-[11px] text-gray-500">${p.desc}</p>
+                        </div>
+                        <button ${enEspera ? 'disabled':''} onclick="solicitarPremio(${p.id})" class="${enEspera ? 'bg-gray-200 text-gray-400 cursor-not-allowed':'bg-amber-500 text-slate-950 font-black hover:bg-amber-400'} px-3 py-2 rounded-lg transition">
+                            ${enEspera ? 'Espera...': `${p.cost} pts`}
+                        </button>
+                    </div>
+                `;
+                if (p.type === 'permanente') { permanentContainer.innerHTML += targetHtml; } 
+                else { grid.innerHTML += targetHtml; }
+            });
+        }
+
+        function resolverSolicitud(id, estado) {
+            const s = db.solicitudesPremios.find(sol => sol.id === id);
+            if (s) {
+                s.status = estado;
+                db.users[s.hijo].reservedPoints -= s.cost;
+                if (estado === "Rechazado") {
+                    db.users[s.hijo].points += s.cost; // Reembolso inmediato
+                }
+                saveDB(); renderAll();
+            }
+        }
+
+        function renderPanelPadres() {
+            document.getElementById("pointsIan").textContent = db.users.Ian.points;
+            document.getElementById("pointsBruno").textContent = db.users.Bruno.points;
+
+            document.getElementById("medStatusIan").textContent = db.tratamientosMedicos.Ian.activo ? `💊 Esquema Médico Activo` : "Salud: Saludable";
+            document.getElementById("medStatusBruno").textContent = db.tratamientosMedicos.Bruno.activo ? `💊 Esquema Médico Activo` : "Salud: Saludable";
+
+            const container = document.getElementById("weeklyMasterContainer");
+            container.innerHTML = "";
+
+            DIAS_SEMANA.forEach((dia, idx) => {
+                let esHoy = idx === db.currentDayIndex;
+                let tareasHtml = "";
+
+                db.tareasBase.forEach(t => {
+                    if (t.day === "Todos" || t.day.includes(dia)) {
+                        tareasHtml += `
+                            <div class="flex justify-between items-center text-[11px] bg-white border border-gray-100 rounded p-1.5">
+                                <span class="text-gray-700">${t.name} <span class="text-gray-400 text-[9px]">(${t.assignee})</span></span>
+                                <button onclick="eliminarTareaBase(${t.id})" class="text-red-400 font-bold px-1">&times;</button>
+                            </div>
+                        `;
+                    }
+                });
+
+                container.innerHTML += `
+                    <div class="bg-gray-50 border ${esHoy ? 'border-indigo-400 bg-indigo-50/20':'border-gray-200'} rounded-xl p-3 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-xs text-gray-800">${dia} ${esHoy?'(Hoy)':''}</h4>
+                            <button onclick="openModalNuevaTarea('${dia}')" class="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">+</button>
+                        </div>
+                        <div class="space-y-1">${tareasHtml || '<p class="text-[10px] text-gray-400 italic">No hay misiones</p>'}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function openModalNuevaTarea(dia) { document.getElementById("modalTargetDay").textContent = dia; openModal('modalNuevaTarea'); }
+        function guardarNuevaTarea() {
+            const name = document.getElementById("taskName").value;
+            const points = parseInt(document.getElementById("taskPoints").value) || 15;
+            const assignee = document.getElementById("taskAssignee").value;
+            const targetDay = document.getElementById("modalTargetDay").textContent;
+
+            if(!name) return;
+            db.tareasBase.push({ id: Date.now(), name: name, points: points, timeLimit: "Flexible", day: [targetDay], assignee: assignee });
+            saveDB(); closeModal('modalNuevaTarea'); document.getElementById("taskName").value = ""; renderAll();
+        }
+
+        function guardarNuevoPremio() {
+            const name = document.getElementById("awardName").value;
+            const desc = document.getElementById("awardDesc").value || "Meta reglamentaria";
+            const cost = parseInt(document.getElementById("awardCost").value) || 50;
+            const type = document.getElementById("awardType").value;
+
+            if(!name) return;
+            db.catalogoPremios.push({ id: Date.now(), name: name, desc: desc, cost: cost, type: type });
+            saveDB(); closeModal('modalNuevoPremio'); document.getElementById("awardName").value = ""; renderAll();
+        }
+
+        function toggleModoEnfermo(hijo) {
+            if (db.tratamientosMedicos[hijo].activo) {
+                db.tratamientosMedicos[hijo] = { activo: false, medicina: "", tomas: [] };
+                saveDB(); renderAll();
+            } else {
+                document.getElementById("sickTargetName").textContent = hijo;
+                openModal('modalModoEnfermo');
+            }
+        }
+
+        function eliminarTareaBase(id) { db.tareasBase = db.tareasBase.filter(t => t.id !== id); saveDB(); renderAll(); }
+        function ajustarPuntos(isSum) {
+            const hijo = document.getElementById("adjHijo").value;
+            const pts = parseInt(document.getElementById("adjPuntos").value) || 0;
+            db.users[hijo].points = isSum ? db.users[hijo].points + pts : Math.max(0, db.users[hijo].points - pts);
+            saveDB(); document.getElementById("adjPuntos").value = ""; renderAll();
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove("hidden"); }
+        function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
+
+        function lanzarDado() {
+            const hijo = db.currentUser;
+            if (db.users[hijo].lanzadoDado) { alert("Ya utilizaste tu tiro diario. 🎲"); return; }
+            const r = [{n:"Sacudir el polvo de la sala", p:15},{n:"Ordenar los zapatos", p:20}][Math.floor(Math.random()*2)];
+            db.tareasDiariasHistorial[`${getActiveDayName()}-${hijo}`].push({ id: Date.now(), name: `🎲 DADO: ${r.n}`, points: r.p, timeLimit: "Flexible", done: false });
+            db.users[hijo].lanzadoDado = true; saveDB(); renderAll();
+        }
+
+        function renderAll() { renderTareasChicos(); renderTienda(); renderPanelPadres(); }
+        window.onload = function() { initDB(); switchUser("Ian"); };
+    </script>
+</body>
+</html>
